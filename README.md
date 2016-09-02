@@ -6,6 +6,6 @@ Ce bot étant encore à une version Preview, Contactez #Acrown4424 sur Discord p
 -----------------------------------------------------------
 
 Pour obtenir le fichier en local utilisez 
-`git clone -b beta --single-branch https://github.com/GitAcrown/ProjectFreya.git ProjectFreya`
+`git clone -b preview --single-branch https://github.com/GitAcrown/ProjectFreya.git ProjectFreya`
 
 Utilisez `git push` dans ce même dossier avec "Git bash here" pour mettre à jour le bot.
