@@ -6,4 +6,4 @@ Ce bot étant encore à une version Preview, Contactez #Acrown4424 sur Discord p
 -----------------------------------------------------------
 
 Pour obtenir le fichier en local utilisez 
-`git clone -b develop --single-branch https://github.com/Twentysix26/Red-DiscordBot.git Red-DiscordBot`
+`git clone -b develop --single-branch https://github.com/GitAcrown/ProjectFreya.git ProjectFreya`
