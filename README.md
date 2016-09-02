@@ -1,5 +1,6 @@
 # ProjectFreya Preview
 Basé sur Red, Bot pour Discord (French) 
+*Cette branche preview contient des modules non terminés/non optimisés pour le bot et peuvent corrompre certaines données. A utiliser avec précautions.*
 
 Ce bot étant encore à une version Preview, Contactez #Acrown4424 sur Discord pour l'installer sur votre serveur.
 
