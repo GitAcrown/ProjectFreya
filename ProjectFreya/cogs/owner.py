@@ -545,7 +545,7 @@ class Owner:
         getversion = os.popen(r'git show -s HEAD --format="%cr|%s|%h"')
         getversion = getversion.read()
         version = getversion.split('|')
-        return 'Last updated: ``{}``\nCommit: ``{}``\nHash: ``{}``'.format(
+        return 'Dernière MAJ: ``{}``\nChangement: ``{}``\nHash: ``{}``'.format(
             *version)
 
 def check_files():
