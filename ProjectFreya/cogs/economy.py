@@ -220,10 +220,14 @@ class Economy:
 
     async def auto_register(self, message): #Enregistre automatiquement
         user = message.author
-        try:
-            account = self.bank.create_account(user)
-            await self.bot.whisper("Salut {} ! Tu peux maintenant m'utiliser sur le salon 'Shitpost'. Plus d'infos ? Fait *&help* sur ce même MP !".format(user.name))
-        except AccountAlreadyExists:
+        server = message.server
+        if server != None:
+            try:
+                account = self.bank.create_account(user)
+                await self.bot.whisper("Salut {} ! Tu peux maintenant m'utiliser sur le salon 'Shitpost'. Plus d'infos ? Fait *&help* sur ce même MP !".format(user.name))
+            except AccountAlreadyExists:
+                pass
+        else:
             pass
 
     @_bank.command(pass_context=True)
