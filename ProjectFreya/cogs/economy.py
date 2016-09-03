@@ -207,7 +207,7 @@ class Economy:
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @_bank.command(pass_context=True, no_pm=True, hidden=True)
+    @_bank.command(pass_context=True, no_pm=True, hidden=True) #Inutile depuis MAJ "auto_register"
     async def register(self, ctx):
         """Enregistre un compte dans EKBank"""
         user = ctx.message.author
@@ -459,6 +459,13 @@ class Economy:
             msg += "```"
             await send_cmd_help(ctx)
             await self.bot.say(msg)
+
+    @economyset.command(pass_context=True)
+    async def wipe(self, ctx):
+        """Efface entièrement la banque. N'efface pas les données des autres modules."""
+        server = ctx.message.server
+        self.bank.wipe_bank(server)
+        await self.bot.say("Banque effacée.")
 
     @economyset.command(pass_context=True)
     async def boost(self, ctx, multiplicateur : int):
