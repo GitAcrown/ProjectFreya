@@ -118,6 +118,7 @@ class Russianroulette:
         players = [subdict for subdict in self.rrgame["Players"]]
         count = len(players)
         turn = 0
+        await self.bot.change_status(discord.Game(name="Roulette Russe"))
         high_noon = random.randint(1, 100)
         if high_noon > 1:
             while i > 0:
@@ -131,6 +132,7 @@ class Russianroulette:
                     bank = self.bot.get_cog('Economy').bank
                     bank.deposit_credits(mobj, pot)
                     self.system_reset()
+                    await self.bot.change_status(None)
                     await self.bot.say("**Terminé**")
                     break
                 elif i > 1:
