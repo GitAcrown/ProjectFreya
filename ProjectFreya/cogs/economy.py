@@ -224,7 +224,7 @@ class Economy:
         if server != None:
             try:
                 account = self.bank.create_account(user)
-                await self.bot.whisper("Salut {} ! Tu peux maintenant m'utiliser sur le salon 'Shitpost'. Plus d'infos ? Fait *&help* sur ce même MP !".format(user.name))
+                await self.bot.send_message(user, "Salut {} ! Tu peux m'utiliser sur le salon 'Shitpost'. Plus d'infos ? Fait *&help* sur ce MP !".format(user.name))
             except AccountAlreadyExists:
                 pass
         else:
