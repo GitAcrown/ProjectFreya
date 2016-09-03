@@ -34,21 +34,15 @@ class General:
         """Pong."""
         await self.bot.say("Pong.")
 
-    @commands.command(hidden=True, pass_context=True)
-    async def cafe(self, ctx):
-        """Fait le café."""
+    @commands.command(pass_context=True)
+    async def make(self, ctx, *objet):
+        """Fait un objet en particulier."""
+        objet = " ".join(objet)
         user = ctx.message.author
-        await self.bot.say("Café en préparation ...")
-        await asyncio.sleep(20)
-        await self.bot.say("Voilà {}, votre café est prêt :coffee: !".format(user.mention))
-
-    @commands.command(hidden=True, pass_context=True)
-    async def the(self, ctx):
-        """Fait le the."""
-        user = ctx.message.author
-        await self.bot.say("Thé en préparation ...")
-        await asyncio.sleep(20)
-        await self.bot.say("Voilà {}, votre thé est prêt :tea: !".format(user.mention))
+        await self.bot.say("**{}** en préparation ...".format(objet))
+        wait = randint(15, 25)
+        await asyncio.sleep(wait)
+        await self.bot.say("Voilà {}, votre **{}** est prêt(e) !".format(user.mention, objet))
 
     @commands.command()
     async def choose(self, *choices):
