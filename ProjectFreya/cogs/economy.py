@@ -209,14 +209,14 @@ class Economy:
 
     @_bank.command(pass_context=True, no_pm=True, hidden=True) #Inutile depuis MAJ "auto_register"
     async def register(self, ctx):
-        """Enregistre un compte dans EKBank"""
+        """Enregistre un compte dans Bank"""
         user = ctx.message.author
         try:
             account = self.bank.create_account(user)
             await self.bot.say("{} Compte ouvert. Vous avez: {}§".format(user.mention,
                 account.balance))
         except AccountAlreadyExists:
-            await self.bot.say("{} Tu as déjà un compte EKBank.".format(user.mention))
+            await self.bot.say("{} Tu as déjà un compte Bank.".format(user.mention))
 
     async def auto_register(self, message): #Enregistre automatiquement
         user = message.author
@@ -236,12 +236,12 @@ class Economy:
             try:
                 await self.bot.say("{} Vous avez: {}§".format(user.mention, self.bank.get_balance(user)))
             except NoAccount:
-                await self.bot.say("{} Vous n'avez pas de compte chez EKBank. Tapez {}bank register pour en ouvrir un.".format(user.mention, ctx.prefix))
+                await self.bot.say("{} Vous n'avez pas de compte chez Bank. Tapez {}bank register pour en ouvrir un.".format(user.mention, ctx.prefix))
         else:
             try:
                 await self.bot.say("{} possède {}§".format(user.name, self.bank.get_balance(user)))
             except NoAccount:
-                await self.bot.say("Cet utilisateur ne possède pas de compte EKBank.")
+                await self.bot.say("Cet utilisateur ne possède pas de compte Bank.")
 
     @_bank.command(pass_context=True)
     async def transfer(self, ctx, user : discord.Member, sum : int):
@@ -462,7 +462,7 @@ class Economy:
 
     @economyset.command(pass_context=True)
     async def wipe(self, ctx):
-        """Efface entièrement la banque. N'efface pas les données des autres modules."""
+        """Efface entièrement Bank. N'efface pas les données des autres modules."""
         server = ctx.message.server
         self.bank.wipe_bank(server)
         await self.bot.say("Banque effacée.")
