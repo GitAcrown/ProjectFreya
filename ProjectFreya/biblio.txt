@@ -1,3 +1,5 @@
+Ces bibliothèques sont nécéssaire pour lancer certains modules correctement.
+
 Imgurpython (Mod. Image) - pip3 install imgurpython
 Cleverbot (Mod. General) - pip3 install Cleverbot
 Tabulate (Mod. Economy, Payday) - pip3 install tabulate
