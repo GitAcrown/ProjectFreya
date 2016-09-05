@@ -25,25 +25,30 @@ class Payday:
     def __init__(self, bot):
         self.bot = bot
         self.system = fileIO("data/bankheist/system.json", "load")
-        self.good = [["{} prépare le voiture, prêt à partir +25 points.", 25],
+        self.good = [["{} prépare la voiture, prêt à partir +25 points.", 25],
                      ["{} coupe le courant +50 points.", 50],
                      ["{} efface l'enregistrement vidéo +50 points", 50],
-                     ["{} hack le systeme de sécurité et remplace la vidéo par du Vitas +75 points", 75],
+                     ["{} hack le systeme de sécurité et remplace la vidéo par Vitas - The 7th element +75 points", 75],
                      ["{} tue le garde qui tentait d'appuyer sur l'alarme +50 points", 50],
                      ["{} assome le garde de sécurité +50 points", 50],
                      ["{} a tué un random qui tentait de faire le héros +50 points", 50],
                      ["{} a réussit à forcer la police a livrer une pizza pour tout le monde +25 points", 25],
                      ["{} a acheté des masques pour cacher son identité +25 points", 25],
                      ["{} trouve la porte de derrière +25 points", 25],
+                     ["{} s'est entrainé sur Payday 2 +25 points", 25],
                      ["{} a ammené des munitions supplémentaires pour le crew +25 points", 25],
                      ["{} perce le coffre comme dans du beurre +25 points", 25],
                      ["{} garde les otages sous contrôle +25 points", 25],
+                     ["{} apporte des explosifs pour la porte +50 points", 50],
                      ["{} campe comme un kikoo-callof sur le toît +100 points", 100],
                      ["{} distrait le garde en se déshabillant devant la caméra +25 points", 25],
                      ["{} a pris du café pour le crew +25 points", 25],
-                     ["{} a infiltré la banque en employé +50 points", 25],
-                     ["{} distribue des gants pour ne pas laisser ses empreintes +50 points", 25],
-                     ["{} trouve une boite de diamands sur un civil +25 points", 25]]
+                     ["{} agite les bras pour faire peur aux enfants +25 points", 25],
+                     ["{} s'équipe du baton à 250€ pour repousser les policiers +25 points", 25],
+                     ["{} a infiltré la banque en employé +25 points", 25],
+                     ["{} se sert d'un enfant cancéreux comme bouclier humain +50 points", 50],
+                     ["{} distribue des gants pour ne pas laisser ses empreintes +50 points", 50],
+                     ["{} trouve une boite de diamants sur un civil +25 points", 25]]
         self.bad = ["Un tir à eu lieu avec la police locale et {} est touché." + "\n" +
                     "`{} hors jeu.`",
                     "Les policiers ont trouvés des empreintes de chaussures sur le sol provenant de {}" + "\n" +
@@ -51,6 +56,8 @@ class Payday:
                     "{} se crash avec sa Volvo sur le chemin de la banque" + "\n" +
                     "`{} hors jeu.`",
                     "{} se fait coincé en train de jouer à Pokemon Go" + "\n" +
+                    "`{} hors jeu.`",
+                    "{} se fait chopper en train de prendre son goûté" + "\n" +
                     "`{} hors jeu.`",
                     "{} glisse sur une plaque de verglas à l'entrée de la Banque" + "\n" +
                     "`{} hors jeu.`",
@@ -64,7 +71,11 @@ class Payday:
                     "`{} hors jeu.`",
                     "{} a été captué en partant aux toilettes" + "\n" +
                     "`{} hors jeu.`",
+                    "{} se mange la porte et reste allongé sur le sol" + "\n" +
+                    "`{} hors jeu.`",
                     "{} s'est montré devant la police, tellement bourré qu'il était incapable de voir que ce n'était pas le crew." + "\n" +
+                    "`{} hors jeu.`",
+                    "{} trop occupé à compter les billets s'est fait attrapé." + "\n" +
                     "`{} hors jeu.`",
                     "Le sac d'argent de {} contenait une cartouche explosive de marqueur bleu, permettant à la police de remonter le suspect" + "\n" +
                     "`{} hors jeu.`",
@@ -74,11 +85,19 @@ class Payday:
                     "`{} hors jeu.`",
                     "{} a été tué par un tir allié" + "\n" +
                     "`{} hors jeu.`",
+                    "{} effrayé par le petit chien de sécurité cours rapidement en dehors de la banque." + "\n" +
+                    "`{} hors jeu.`",
                     "Un civil a filmé {} ce qui a permis de le retrouver" + "\n" +
                     "`{} hors jeu.`",
                     "{} révèle son identité sur facebook." + "\n" +
                     "`{} hors jeu.`",
+                    "{} prend un selfie avec un gardien assassiné." + "\n" +
+                    "`{} hors jeu.`",
                     "Le GIGN a envoyé du Zyklon B, {} dort comme un bébé" + "\n" +
+                    "`{} hors jeu.`",
+                    "{} reste enfermé à cause du système de sécurité de la banque" + "\n" +
+                    "`{} hors jeu.`",
+                    "{} n'avait pas envie de le faire, en fait." + "\n" +
                     "`{} hors jeu.`",
                     "'FLASH BANG!', à été la dernière chose que {} à entendu" + "\n" +
                     "`{} hors jeu.`",
@@ -98,11 +117,52 @@ class Payday:
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
+    @payday.command(name="role", pass_context=True)
+    async def _role_payday(self, ctx):
+        """Vous donne le rôle @Payday pour être notifié au début de chaque partie.
+
+        Si le rôle n'existe pas sur le serveur, il sera créé automatiquement."""
+        server = ctx.message.server
+        user = ctx.message.author
+        # Regarde si le rôle existe
+        if 'Payday' not in [r.name for r in server.roles]:
+            await self.bot.say("Le rôle n'existe pas. Je vais donc le créer...")
+            try:
+                perms = discord.Permissions.none()
+                # Active les permissions voulues (si nécéssaire)
+                await self.bot.create_role(server, name="Payday", permissions=perms)
+                await self.bot.say("Rôle crée ! Refaites la commande pour obtenir le rôle !")
+                try:
+                    for c in server.channels:
+                        if c.type.name == 'text':
+                            perms = discord.PermissionOverwrite()
+                            perms.send_messages = False
+                            r = discord.utils.get(ctx.message.server.roles, name="Payday")
+                            await self.bot.edit_channel_permissions(c, r, perms)
+                        await asyncio.sleep(1.5)
+                except discord.Forbidden:
+                    await self.bot.say("Une erreur est apparue.")
+            except discord.Forbidden:
+                await self.bot.say("Je ne peux pas créer le rôle.")
+        else:
+            server = ctx.message.server
+            if user.id == self.bot.user.id:
+                await self.bot.say("Je ne peux pas avoir ce rôle...")
+            r = discord.utils.get(ctx.message.server.roles, name="Payday")
+            if 'Payday' not in [r.name for r in user.roles]:
+                await self.bot.add_roles(user, r)
+                await self.bot.say("{} Vous avec maintenant le rôle Payday".format(user.name))
+            else:
+                await self.bot.remove_roles(user, r)
+                await self.bot.say("{} Vous n'avez plus le rôle Payday".format(user.name))
+      
+
     @payday.command(name="play", pass_context=True)
     async def _play_payday(self, ctx, bet: int):
         """Commence un vol de banque en fonction du nombre de joueurs"""
         user = ctx.message.author
         server = ctx.message.server
+        r = discord.utils.get(ctx.message.server.roles, name="Payday")
         if bet >= 50:
             if self.account_check(user):
                 if self.enough_points(user.id, bet, server):
@@ -119,7 +179,7 @@ class Payday:
                                 half_time = int(wait_time / 2)
                                 split_time = int(half_time / 2)
                                 await self.bot.change_status(discord.Game(name="Payday"))
-                                await self.bot.say("**Une partie de Payday à été lancé par " + user.name + "**" +
+                                await self.bot.say( r.mention + " **Une partie de Payday à été lancé par " + user.name + "**" +
                                                    "\n" + "*" + str(wait) + " secondes avant que ça ne commence*")
                                 await asyncio.sleep(wait_time)
                                 await self.bot.say("*"+ str(wait_time) + " secondes avant que la partie démarre*")
@@ -678,11 +738,11 @@ def check_files():
                          "Min Bet": 0, "Wait Time": 120, "Bank Target": "",
                          "Vault Frequency": 120},
               "Heist Winners": {},
-              "Banks": {"Lvl 1 Bank": {"Name": "RandomBank", "Crew": 3, "Multiplier": 0.25, "Success": 46, "Vault": 2000, "Max": 2000},
-                        "Lvl 2 Bank": {"Name": "Bank56", "Crew": 5, "Multiplier": 0.31, "Success": 40, "Vault": 5000, "Max": 5000},
-                        "Lvl 3 Bank": {"Name": "Webedia", "Crew": 7, "Multiplier": 0.35, "Success": 37, "Vault": 8000, "Max": 8000},
-                        "Lvl 4 Bank": {"Name": "JewishBank", "Crew": 9, "Multiplier": 0.42, "Success": 32, "Vault": 12000, "Max": 12000},
-                        "Lvl 5 Bank": {"Name": "EKBank", "Crew": 11, "Multiplier": 0.5, "Success": 28, "Vault": 20000, "Max": 20000},
+              "Banks": {"Lvl 1 Bank": {"Name": "Serveur", "Crew": 2, "Multiplier": 0.32, "Success": 46, "Vault": 1500, "Max": 1500},
+                        "Lvl 2 Bank": {"Name": "4chan", "Crew": 4, "Multiplier": 0.41, "Success": 40, "Vault": 4000, "Max": 4000},
+                        "Lvl 3 Bank": {"Name": "Madmoizelle", "Crew": 6, "Multiplier": 0.49, "Success": 37, "Vault": 7000, "Max": 7000},
+                        "Lvl 4 Bank": {"Name": "Webedia", "Crew": 8, "Multiplier": 0.54, "Success": 32, "Vault": 10500, "Max": 10500},
+                        "Lvl 5 Bank": {"Name": "Valve", "Crew": 10, "Multiplier": 0.61, "Success": 28, "Vault": 18000, "Max": 18000},
                         },
               }
 
