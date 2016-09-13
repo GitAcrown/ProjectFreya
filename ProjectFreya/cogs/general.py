@@ -16,6 +16,7 @@ from cleverbot import Cleverbot
 
 settings = {"POLL_DURATION" : 60}
 cb = Cleverbot()
+headers = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36"
 
 class General:
     """General commands."""
@@ -246,6 +247,28 @@ class General:
         elif intensity >= 10:
             msg = "(づ￣ ³￣)づ" + name + " ⊂(´・ω・｀⊂)"
         await self.bot.say(msg)
+
+    @commands.command()
+    async def updown(self, url):
+        """Recherche si un site est disponible ou pas."""
+        if url == "":
+            await self.bot.say("Vous n'avez pas rentré de site à rechercher.")
+            return
+        if "http://" not in url or "https://" not in url:
+            url = "http://" + url
+        try:
+            with aiohttp.Timeout(15):
+                await self.bot.say("Test de " + url + "…")
+                try:
+                    response = await aiohttp.get(url, headers = { 'user_agent': headers })
+                    if response.status == 200:
+                        await self.bot.say(url + " semble répondre correctement.")
+                    else:
+                        await self.bot.say(url + " ne réponds pas. Le site est mort.")
+                except:
+                    await self.bot.say(url + " est down.")
+        except asyncio.TimeoutError:
+            await self.bot.say(url + " est down.")
 
     @commands.command(pass_context=True, no_pm=True)
     async def userinfo(self, ctx, user : discord.Member = None):
