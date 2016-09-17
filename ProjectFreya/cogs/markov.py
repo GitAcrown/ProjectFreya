@@ -19,38 +19,41 @@ class MarkovChain(discord.Client):
         self.bot = bot
         self.wordSet = dataIO.load_json('data/markov/data.json')
 
-    @commands.command(aliases=["l"])
-    async def listen(self, startingWord):
-        if startingWord in self.wordSet:
-            finalString = ""
-            p = self.WeightedPick(self.wordSet[startingWord])
-            for i in range(randint(5,200)):
-                if p not in self.wordSet:
-                    break
-                finalString += " " + p
-                p = self.WeightedPick(self.wordSet[p])
-                if p == "":
-                    break
-            if finalString == "":
-                await self.bot.say("Je note...")
-            else:
-                await self.bot.say(startingWord + finalString)
+    @commands.command()
+    async def brainwash(self, mot):
+        if mot in self.wordSet:
+            del self.wordSet[mot]
+            await self.bot.say("Je crois que c'est fait...")
         else:
-            await self.bot.say("Je rajoute ça dans mon dico...")
+            await self.bot.say("Je ne connais pas ça.")
 
-    async def learn(self, startingWord):
-        if startingWord in self.wordSet:
-            finalString = ""
-            p = self.WeightedPick(self.wordSet[startingWord])
-            for i in range(randint(5,200)):
-                if p not in self.wordSet:
-                    break
-                finalString += " " + p
-                p = self.WeightedPick(self.wordSet[p])
-                if p == "":
-                    break
+    @commands.command(name = "l")
+    async def react(self, startingWord):
+        if "@" not in startingWord:
+            if "&" not in startingWord:
+                if "http" not in startingWord:
+                    if startingWord in self.wordSet:
+                        finalString = ""
+                        p = self.WeightedPick(self.wordSet[startingWord])
+                        for i in range(randint(5,200)):
+                            if p not in self.wordSet:
+                                break
+                            finalString += " " + p
+                            p = self.WeightedPick(self.wordSet[p])
+                            if p == "":
+                                break
+                        if finalString == "":
+                            await self.bot.say("Je note...")
+                        else:
+                            await self.bot.say(startingWord + finalString)
+                    else:
+                        await self.bot.say("Je rajoute ça dans mon dico...")
+                else:
+                    await self.bot.say("N'essaye même pas de me corrompre avec ce lien.")
+            else:
+                await self.bot.say("Ignoré.")
         else:
-            pass
+            await self.bot.say("Désolé mais je m'en branle de vos pseudos.")
 
     def WeightedPick(self, d):
         k = ""
@@ -64,17 +67,20 @@ class MarkovChain(discord.Client):
     def NewMessage(self, message):
         lastWord = ""
         wordSet = self.wordSet
-        for word in message.split():
-            if (word not in wordSet):
-                wordSet[word] = {}
-            if lastWord != "":
-                if (word not in wordSet[lastWord]):
-                    wordSet[lastWord][word] = 1
-                else:
-                    wordSet[lastWord][word] += 1
-            lastWord = word
+        if "@" or "http" not in message.content:
+            for word in message.split():
+                if (word not in wordSet):
+                    wordSet[word] = {}
+                if lastWord != "":
+                    if (word not in wordSet[lastWord]):
+                        wordSet[lastWord][word] = 1
+                    else:
+                        wordSet[lastWord][word] += 1
+                lastWord = word
 
-        dataIO.save_json('data/markov/data.json', wordSet)
+            dataIO.save_json('data/markov/data.json', wordSet)
+        else:
+            pass
 
 def check_folders():
     if not os.path.exists("data/markov"):
@@ -92,4 +98,3 @@ def setup(bot):
     check_files()
     n = MarkovChain(bot)
     bot.add_cog(n)
-    bot.add_listener(n.learn, "on_message")
