@@ -117,52 +117,12 @@ class Payday:
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @payday.command(name="role", pass_context=True)
-    async def _role_payday(self, ctx):
-        """Vous donne le rôle @Payday pour être notifié au début de chaque partie.
-
-        Si le rôle n'existe pas sur le serveur, il sera créé automatiquement."""
-        server = ctx.message.server
-        user = ctx.message.author
-        # Regarde si le rôle existe
-        if 'Payday' not in [r.name for r in server.roles]:
-            await self.bot.say("Le rôle n'existe pas. Je vais donc le créer...")
-            try:
-                perms = discord.Permissions.none()
-                # Active les permissions voulues (si nécéssaire)
-                await self.bot.create_role(server, name="Payday", permissions=perms)
-                await self.bot.say("Rôle crée ! Refaites la commande pour obtenir le rôle !")
-                try:
-                    for c in server.channels:
-                        if c.type.name == 'text':
-                            perms = discord.PermissionOverwrite()
-                            perms.send_messages = False
-                            r = discord.utils.get(ctx.message.server.roles, name="Payday")
-                            await self.bot.edit_channel_permissions(c, r, perms)
-                        await asyncio.sleep(1.5)
-                except discord.Forbidden:
-                    await self.bot.say("Une erreur est apparue.")
-            except discord.Forbidden:
-                await self.bot.say("Je ne peux pas créer le rôle.")
-        else:
-            server = ctx.message.server
-            if user.id == self.bot.user.id:
-                await self.bot.say("Je ne peux pas avoir ce rôle...")
-            r = discord.utils.get(ctx.message.server.roles, name="Payday")
-            if 'Payday' not in [r.name for r in user.roles]:
-                await self.bot.add_roles(user, r)
-                await self.bot.say("{} Vous avec maintenant le rôle Payday".format(user.name))
-            else:
-                await self.bot.remove_roles(user, r)
-                await self.bot.say("{} Vous n'avez plus le rôle Payday".format(user.name))
-      
-
     @payday.command(name="play", pass_context=True)
     async def _play_payday(self, ctx, bet: int):
         """Commence un vol de banque en fonction du nombre de joueurs"""
         user = ctx.message.author
         server = ctx.message.server
-        r = discord.utils.get(ctx.message.server.roles, name="Payday")
+        r = discord.utils.get(ctx.message.server.roles, name="Game")
         if bet >= 50:
             if self.account_check(user):
                 if self.enough_points(user.id, bet, server):
