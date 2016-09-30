@@ -449,6 +449,45 @@ class Economy:
         self.bank.deposit_credits(message.author, bid)
         await self.bot.send_message(message.channel, "Crédits restant: {}".format(self.bank.get_balance(message.author)))
 
+    @commands.command(name="playrole", pass_context=True)
+    async def play_role(self, ctx):
+        """Vous donne le rôle @Play pour être notifié au début de chaque partie d'un jeu lié à l'économie.
+
+        Si le rôle n'existe pas sur le serveur, il sera créé automatiquement."""
+        server = ctx.message.server
+        user = ctx.message.author
+        # Regarde si le rôle existe
+        if 'Play' not in [r.name for r in server.roles]:
+            await self.bot.say("Le rôle n'existe pas. Je vais donc le créer...")
+            try:
+                perms = discord.Permissions.none()
+                # Active les permissions voulues (si nécéssaire)
+                await self.bot.create_role(server, name="Play", permissions=perms)
+                await self.bot.say("Rôle crée ! Refaites la commande pour obtenir le rôle !")
+                try:
+                    for c in server.channels:
+                        if c.type.name == 'text':
+                            perms = discord.PermissionOverwrite()
+                            perms.send_messages = False
+                            r = discord.utils.get(ctx.message.server.roles, name="Play")
+                            await self.bot.edit_channel_permissions(c, r, perms)
+                        await asyncio.sleep(1.5)
+                except discord.Forbidden:
+                    await self.bot.say("Une erreur est apparue.")
+            except discord.Forbidden:
+                await self.bot.say("Je ne peux pas créer le rôle.")
+        else:
+            server = ctx.message.server
+            if user.id == self.bot.user.id:
+                await self.bot.say("Je ne peux pas obtenir ce rôle...")
+            r = discord.utils.get(ctx.message.server.roles, name="Play")
+            if 'Play' not in [r.name for r in user.roles]:
+                await self.bot.add_roles(user, r)
+                await self.bot.say("{} Vous avec maintenant le rôle *Play*".format(user.name))
+            else:
+                await self.bot.remove_roles(user, r)
+                await self.bot.say("{} Vous n'avez plus le rôle *Play*".format(user.name))
+
     @commands.group(pass_context=True, no_pm=True)
     @checks.admin_or_permissions(manage_server=True)
     async def economyset(self, ctx):
