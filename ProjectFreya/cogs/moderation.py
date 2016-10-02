@@ -125,7 +125,7 @@ class Mod:
             nickname = None
         try:
             await self.bot.change_nickname(user, nickname)
-            await self.bot.say("Fait.)
+            await self.bot.say("Fait")
         except discord.Forbidden:
             await self.bot.say("Je n'ai pas les autorisations pour le faire")
 
@@ -441,7 +441,7 @@ class Mod:
     async def filter_add(self, ctx, *words: str):
         """Ajoute un mot au filtre
 
-        Utilisez des guillemets pour une chaine de mots.""""
+        Utilisez des guillemets pour une chaine de mots."""
         if words == ():
             await send_cmd_help(ctx)
             return
@@ -461,7 +461,7 @@ class Mod:
 
     @_filter.command(name="remove", pass_context=True)
     async def filter_remove(self, ctx, *words: str):
-        """Retire des mots du filtre""""
+        """Retire des mots du filtre"""
         if words == ():
             await send_cmd_help(ctx)
             return
