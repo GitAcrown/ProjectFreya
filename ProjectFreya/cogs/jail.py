@@ -23,7 +23,7 @@ class Jail:
 
     @commands.group(pass_context=True)
     async def jail(self, ctx):
-        """Gestion du profil."""
+        """Gestion du module Prison."""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
             msg = "```"
