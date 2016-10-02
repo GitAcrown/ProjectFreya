@@ -138,7 +138,7 @@ class Payday:
                                 wait_time = int(wait / 2)
                                 half_time = int(wait_time / 2)
                                 split_time = int(half_time / 2)
-                                await self.bot.change_status(discord.Game(name="Play"))
+                                await self.bot.change_status(discord.Game(name="Payday"))
                                 await self.bot.say( r.mention + " **Une partie de Payday à été lancé par " + user.name + "**" +
                                                    "\n" + "*" + str(wait) + " secondes avant que ça ne commence*")
                                 await asyncio.sleep(wait_time)
