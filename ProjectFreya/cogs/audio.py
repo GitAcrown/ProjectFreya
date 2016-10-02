@@ -964,6 +964,19 @@ class Audio:
             await send_cmd_help(ctx)
             return
 
+    @audioset.command(pass_context=True, name="acceptrole")
+    @checks.mod_or_permissions(ban_members=True)
+    async def accept_role(self, ctx):
+        """Active/Désactive l'acceptation du rôle Audio."""
+        if self.settings["ROLEP"] == True:
+            self.settings["ROLEP"] = False
+            self.save_settings()
+            await self.bot.say("Rôle désactivé.")
+        else:
+            self.settings["ROLEP"] = True
+            self.save_settings()
+            await self.bot.say("Rôle activé.")
+
     @audioset.command(pass_context=True, name="audiorole")
     @checks.mod_or_permissions(ban_members=True)
     async def audio_role(self, ctx):
@@ -977,7 +990,9 @@ class Audio:
                 perms = discord.Permissions.none()
                 # Active les permissions voulues (si nécéssaire)
                 await self.bot.create_role(server, name=nom, permissions=perms)
-                await self.bot.say("Rôle crée ! Permissions reglées !\nAssurez-vous que les modérateurs soient au dessus de ce rôle.")
+                await self.bot.say("Rôle crée ! \nAssurez-vous que les modérateurs soient au dessus de ce rôle.\n Veuillez régler les permissions du rôle.")
+                self.settings["ROLEP"] = True
+                self.save_settings()
                 try:
                     for c in server.channels:
                         if c.type.name == 'text':
@@ -1255,7 +1270,64 @@ class Audio:
         server = ctx.message.server
         user = ctx.message.author
         r = discord.utils.get(ctx.message.server.roles, name="Audio")
-        if "Audio" in [r.name for r in user.roles]:
+        if self.settings["ROLEP"] == True:
+            if "Audio" in [r.name for r in user.roles]:
+                url = url_or_search_terms
+                server = ctx.message.server
+                author = ctx.message.author
+                voice_channel = author.voice_channel
+
+                # Checking if playing in current server
+
+                if self.is_playing(server):
+                    await ctx.invoke(self._queue, url=url)
+                    return  # Default to queue
+
+                # Checking already connected, will join if not
+
+                if not self.voice_connected(server):
+                    try:
+                        self.has_connect_perm(author, server)
+                    except AuthorNotConnected:
+                        await self.bot.say("Vous devez d'abord rejoindre un salon")
+                        return
+                    except UnauthorizedConnect:
+                        await self.bot.say("je n'ai pas les permissions")
+                        return
+                    except UnauthorizedSpeak:
+                        await self.bot.say("Je n'ai pas les permissions")
+                        return
+                    else:
+                        await self._join_voice_channel(voice_channel)
+                else:  # We are connected but not to the right channel
+                    if self.voice_client(server).channel != voice_channel:
+                        await self._stop_and_disconnect(server)
+                        await self._join_voice_channel(voice_channel)
+
+                # If not playing, spawn a downloader if it doesn't exist and begin
+                #   downloading the next song
+
+                if self.currently_downloading(server):
+                    await self.bot.say("Je télécharge déjà un fichier!")
+                    return
+
+                if "." in url:
+                    if not self._valid_playable_url(url):
+                        await self.bot.say("Ce n'est pas un URL valide.")
+                        return
+                else:
+                    url = url.replace("/", "&#47")
+                    url = "[SEARCH:]" + url
+
+                if "[SEARCH:]" not in url and "youtube" in url:
+                    url = url.split("&")[0] # Temp fix for the &list issue
+
+                self._stop_player(server)
+                self._clear_queue(server)
+                self._add_to_queue(server, url)
+            else:
+                await self.bot.say("Vous n'avez pas le rôle Audio")
+        else:
             url = url_or_search_terms
             server = ctx.message.server
             author = ctx.message.author
@@ -1288,29 +1360,27 @@ class Audio:
                     await self._stop_and_disconnect(server)
                     await self._join_voice_channel(voice_channel)
 
-            # If not playing, spawn a downloader if it doesn't exist and begin
-            #   downloading the next song
+                # If not playing, spawn a downloader if it doesn't exist and begin
+                #   downloading the next song
 
-            if self.currently_downloading(server):
-                await self.bot.say("Je télécharge déjà un fichier!")
-                return
-
-            if "." in url:
-                if not self._valid_playable_url(url):
-                    await self.bot.say("Ce n'est pas un URL valide.")
+                if self.currently_downloading(server):
+                    await self.bot.say("Je télécharge déjà un fichier!")
                     return
-            else:
-                url = url.replace("/", "&#47")
-                url = "[SEARCH:]" + url
 
-            if "[SEARCH:]" not in url and "youtube" in url:
-                url = url.split("&")[0] # Temp fix for the &list issue
+                if "." in url:
+                    if not self._valid_playable_url(url):
+                        await self.bot.say("Ce n'est pas un URL valide.")
+                        return
+                else:
+                    url = url.replace("/", "&#47")
+                    url = "[SEARCH:]" + url
 
-            self._stop_player(server)
-            self._clear_queue(server)
-            self._add_to_queue(server, url)
-        else:
-            await self.bot.say("Vous n'avez pas le rôle Audio")
+                if "[SEARCH:]" not in url and "youtube" in url:
+                    url = url.split("&")[0] # Temp fix for the &list issue
+
+                self._stop_player(server)
+                self._clear_queue(server)
+                self._add_to_queue(server, url)
 
     @commands.command(pass_context=True, no_pm=True)
     async def prev(self, ctx):
@@ -1523,7 +1593,44 @@ class Audio:
         server = ctx.message.server
         user = ctx.message.author
         r = discord.utils.get(ctx.message.server.roles, name="Audio")
-        if "Audio" in [r.name for r in user.roles]:
+        if self.settings["ROLEP"] == True:
+            if "Audio" in [r.name for r in user.roles]:
+                if url is None:
+                    return await self._queue_list(ctx)
+                server = ctx.message.server
+                if not self.voice_connected(server):
+                    await ctx.invoke(self.play, url_or_search_terms=url)
+                    return
+
+                # We are connected somewhere
+                if server.id not in self.queue:
+                    log.debug("Something went wrong, we're connected but have no"
+                              " queue entry.")
+                    raise VoiceNotConnected("Je n'ai pas pu la mettre dans la boucle.")
+
+                if "." in url:
+                    if not self._valid_playable_url(url):
+                        await self.bot.say("URL Invalide.")
+                        return
+                else:
+                    url = "[SEARCH:]" + url
+
+                if "[SEARCH:]" not in url and "youtube" in url:
+                    url = url.split("&")[0] # Temp fix for the &list issue
+
+                # We have a queue to modify
+                if self.queue[server.id]["PLAYLIST"]:
+                    log.debug("queueing to the temp_queue for sid {}".format(
+                        server.id))
+                    self._add_to_temp_queue(server, url)
+                else:
+                    log.debug("queueing to the actual queue for sid {}".format(
+                        server.id))
+                    self._add_to_queue(server, url)
+                await self.bot.say("**Ajoutée**")
+            else:
+                await self.bot.say("Vous n'avez pas le rôle Audio")
+        else:
             if url is None:
                 return await self._queue_list(ctx)
             server = ctx.message.server
@@ -1557,8 +1664,6 @@ class Audio:
                     server.id))
                 self._add_to_queue(server, url)
             await self.bot.say("**Ajoutée**")
-        else:
-            await self.bot.say("Vous n'avez pas le rôle Audio")
 
     async def _queue_list(self, ctx):
         """Not a command, use `queue` with no args to call this."""
@@ -1674,7 +1779,49 @@ class Audio:
         server = ctx.message.server
         user = ctx.message.author
         r = discord.utils.get(ctx.message.server.roles, name="Audio")
-        if "Audio" in [r.name for r in user.roles]:
+        if self.settings["ROLEP"]:
+            if "Audio" in [r.name for r in user.roles]:
+                if self.is_playing(server):
+                    vchan = server.me.voice_channel
+                    vc = self.voice_client(server)
+                    if msg.author.voice_channel == vchan:
+                        if self.can_instaskip(msg.author):
+                            vc.audio_player.stop()
+                            if self._get_queue_repeat(server) is False:
+                                self._set_queue_nowplaying(server, None)
+                            await self.bot.say("**Skip...**")
+                        else:
+                            if msg.author.id in self.skip_votes[server.id]:
+                                self.skip_votes[server.id].remove(msg.author.id)
+                                reply = "J'ai enlevé votre vote."
+                            else:
+                                self.skip_votes[server.id].append(msg.author.id)
+                                reply = "Vous avez voté pour sauter ce morceau."
+
+                            num_votes = len(self.skip_votes[server.id])
+                            # Exclude bots and non-plebs
+                            num_members =  sum(not (m.bot or self.can_instaskip(m)) for m in vchan.voice_members)
+                            vote = int(100*num_votes / num_members)
+                            thresh = self.get_server_settings(server)["VOTE_THRESHOLD"]
+
+                            if vote >= thresh:
+                                vc.audio_player.stop()
+                                if self._get_queue_repeat(server) is False:
+                                    self._set_queue_nowplaying(server, None)
+                                self.skip_votes[server.id] = []
+                                await self.bot.say("Pourcentage de vote atteint. **Skip...**")
+                                return
+                            else:
+                                reply += " Votes: %d/%d" % (num_votes, num_members)
+                                reply += " (%d%% de %d%% nécéssaire)" % (vote, thresh)
+                            await self.bot.reply(reply)
+                    else:
+                        await self.bot.reply("Vous n'êtes pas dans le channel.")
+                else:
+                    await self.bot.say("Impossible, je ne joue rien.")
+            else:
+                await self.bot.say("Vous n'avez pas le rôle Audio")
+        else:
             if self.is_playing(server):
                 vchan = server.me.voice_channel
                 vc = self.voice_client(server)
@@ -1713,8 +1860,6 @@ class Audio:
                     await self.bot.reply("Vous n'êtes pas dans le channel.")
             else:
                 await self.bot.say("Impossible, je ne joue rien.")
-        else:
-            await self.bot.say("Vous n'avez pas le rôle Audio")
 
     def can_instaskip(self, member):
         server = member.server
@@ -1793,11 +1938,15 @@ class Audio:
         server = ctx.message.server
         user = ctx.message.author
         r = discord.utils.get(ctx.message.server.roles, name="Audio")
-        if "Audio" in [r.name for r in user.roles]:
+        if self.settings["ROLEP"]:
+            if "Audio" in [r.name for r in user.roles]:
+                await self.bot.say("**Recherche...**")
+                await ctx.invoke(self.play, url_or_search_terms=search_terms)
+            else:
+                await self.bot.say("Vous n'avez pas le rôle Audio")
+        else:
             await self.bot.say("**Recherche...**")
             await ctx.invoke(self.play, url_or_search_terms=search_terms)
-        else:
-            await self.bot.say("Vous n'avez pas le rôle Audio")
 
     def is_playing(self, server):
         if not self.voice_connected(server):
@@ -2042,7 +2191,7 @@ def check_files():
     default = {"VOLUME": 50, "MAX_LENGTH": 3700, "VOTE_ENABLED": True,
                "MAX_CACHE": 0, "SOUNDCLOUD_CLIENT_ID": None,
                "TITLE_STATUS": True, "AVCONV": False, "VOTE_THRESHOLD": 50,
-               "SERVERS": {}}
+               "SERVERS": {}, "ROLEP" : False}
     settings_path = "data/audio/settings.json"
 
     if not os.path.isfile(settings_path):
