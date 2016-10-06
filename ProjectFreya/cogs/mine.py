@@ -9,7 +9,7 @@ import asyncio
 import os
 
 #Freya Exclusive
-default = {"CHANNELS" : [], "MINECHAN" : None, "MINEUR" : None, "SPAWNED": None, "COMPTEUR" : 0, "MINIMUM" : 500, "MAXIMUM" : 2000, "LIMITE" : 1000}
+default = {"CHANNELS" : [], "MINECHAN" : None, "MINEUR" : None, "SPAWNED": None, "COMPTEUR" : 0, "MINIMUM" : 250, "MAXIMUM" : 1000, "LIMITE" : 500}
 
 class Mine:
     """Il est temps de partir à la mine..."""
@@ -18,18 +18,18 @@ class Mine:
         self.bot = bot
         self.sys = dataIO.load_json("data/mine/sys.json")
         self.inv = dataIO.load_json("data/mine/inv.json")
-        self.mine_commun = [["Fer", "kg de fer", 18, 1],
-                            ["Sel", "kg de sel", 12, 1],
-                            ["Cuivre", "kg de cuivre", 22, 1]]
-        self.mine_altern = [["Argent", "g d'argent", 34, 2],
-                            ["Or", "g d'or", 48, 2],
-                            ["Platine", "g de platine", 60, 2]]
-        self.mine_rare = [["Rubis", "mg de rubis", 68, 3],
-                          ["Saphire", "mg de saphires", 78, 3],
-                          ["Diamant", "mg de diamants", 90, 3]]
-        self.mine_urare = [["Tritium", "µg de tritium", 140, 4],
-                           ["Plutonium", "µg de plutonium", 196, 4],
-                           ["Antimatière", "µg d'antimatière", 450, 4]]
+        self.mine_commun = [["Fer", "kg de fer", 18, 3],
+                            ["Sel", "kg de sel", 12, 3],
+                            ["Cuivre", "kg de cuivre", 22, 3]]
+        self.mine_altern = [["Argent", "g d'argent", 34, 4],
+                            ["Or", "g d'or", 48, 4],
+                            ["Platine", "g de platine", 60, 4]]
+        self.mine_rare = [["Rubis", "mg de rubis", 68, 5],
+                          ["Saphire", "mg de saphires", 78, 5],
+                          ["Diamant", "mg de diamants", 90, 5]]
+        self.mine_urare = [["Tritium", "µg de tritium", 140, 6],
+                           ["Plutonium", "µg de plutonium", 196, 6],
+                           ["Antimatière", "µg d'antimatière", 450, 7]]
 
     @commands.command(pass_context=True, hidden=True)
     async def mine_debug(self, ctx):
@@ -204,7 +204,7 @@ class Mine:
         """Permet la vente de l'ensemble des items possédés."""
         author = ctx.message.author
         bank = self.bot.get_cog('Economy').bank
-        msg = "***Voici vos ventes :***\n"
+        msg = "__**Voici vos ventes :**__\n"
         if author.id in self.inv:
             if bank.account_exists(author):
                 for item in self.inv[author.id]:
@@ -225,11 +225,11 @@ class Mine:
     async def inventaire(self, ctx):
         """Montre votre inventaire de minerais minés"""
         author = ctx.message.author
-        msg = "***Voici votre inventaire*** {}:\n".format(author.mention)
+        msg = "__**Voici votre inventaire** {}:__\n".format(author.mention)
         if author.id in self.inv:
             if len(self.inv[author.id]) > 0:
                 for item in self.inv[author.id]:
-                    msg += " {} **{}** | *{}*§ l'unité\n".format(self.inv[author.id][item]["QUANTITE"], self.inv[author.id][item]["NOM"], self.inv[author.id][item]["PUNITE"])
+                    msg += "{} **{}** | *{}*§ l'unité\n".format(self.inv[author.id][item]["QUANTITE"], self.inv[author.id][item]["NOM"], self.inv[author.id][item]["PUNITE"])
                 else:
                     msg += "-------------"
                     await self.bot.whisper(msg)
@@ -241,7 +241,7 @@ class Mine:
     @mine.command(pass_context=True)
     async def infos(self, ctx):
         """Affiche des informations sur les minerais disponibles."""
-        msg = "***Minerais disponibles :***\n" + "\n"
+        msg = "__**Minerais disponibles :**__\n" + "\n"
         msg += "**------ COMMUNS ------**\n"
         msg += "*Sel*, 12§ l'unité\n"
         msg += "*Fer*, 18§ l'unité\n"
@@ -262,7 +262,7 @@ class Mine:
         msg += "*Plutonium*, 196§ l'unité\n"
         msg += "*Antimatière*, 450§ l'unité\n"
         msg += "\n"
-        msg += "*Il y a environ :*\n- 40% de chance de tomber sur un commun\n- 30% de chance pour peu commun\n- 20% de chance pour rare\n- 10% de chance pour très rare"
+        msg += "*Il y a environ :*\n- 50% de chance de tomber sur un commun\n- 30% de chance pour peu commun\n- 15% de chance pour rare\n- 5% de chance pour très rare"
         await self.bot.whisper(msg)
         
     def reset(self):
@@ -277,14 +277,14 @@ class Mine:
         fileIO("data/mine/sys.json", "save", self.sys)
 
     def gen_mine(self):
-        aleat = random.randint(1, 20)
-        if aleat < 8:
+        aleat = random.randint(0, 11)
+        if aleat < 5:
             choix = random.choice(self.mine_commun)
             return choix
-        elif aleat >= 8 and aleat < 14:
+        elif aleat >= 5 and aleat < 8:
             choix = random.choice(self.mine_altern)
             return choix
-        elif aleat >= 14 and aleat < 18:
+        elif aleat >= 8 and aleat < 10:
             choix = random.choice(self.mine_rare)
             return choix
         else:
