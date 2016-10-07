@@ -208,11 +208,14 @@ class Mine:
         if author.id in self.inv:
             if bank.account_exists(author):
                 for item in self.inv[author.id]:
-                    vente = self.inv[author.id][item]["PUNITE"] * self.inv[author.id][item]["QUANTITE"]
-                    before = self.inv[author.id][item]["QUANTITE"]
-                    self.inv[author.id][item]["QUANTITE"] = 0
-                    bank.deposit_credits(author, vente)
-                    msg += "Vous venez de vendre {} **{}**. Vous obtenez donc {}§\n".format(before, item, vente)
+                    if self.inv[author.id][item]["QUANTITE"] > 0:
+                        vente = self.inv[author.id][item]["PUNITE"] * self.inv[author.id][item]["QUANTITE"]
+                        before = self.inv[author.id][item]["QUANTITE"]
+                        self.inv[author.id][item]["QUANTITE"] = 0
+                        bank.deposit_credits(author, vente)
+                        msg += "Vous venez de vendre {} **{}**. Vous obtenez donc {}§\n".format(before, item, vente)
+                    else:
+                        pass
                 else:
                     fileIO("data/mine/inv.json", "save", self.inv)
                     await self.bot.say(msg)
