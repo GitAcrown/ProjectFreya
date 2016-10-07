@@ -303,6 +303,10 @@ class Mine:
                 self.sys["SPAWNED"] = minerai #On met le minerai dans la mémoire
                 await self.bot.send_message(channel, "**{}** vient d'apparaitre ! Faîtes [p]mine pioche pour miner !".format(minerai[0])) #On fait spawner le minerai généré (en msg)
                 fileIO("data/mine/sys.json", "save", self.sys)
+            elif self.sys["COMPTEUR"] == self.sys["LIMITE"] + 50:
+                await self.bot.send_message(channel, "**{}** est toujours sur le channel ! Faîtes [p]mine pioche pour miner !".format(minerai[0]))
+            elif self.sys["COMPTEUR"] == self.sys["LIMITE"] + 100:
+                await self.bot.send_message(channel, "**{}** n'est toujours pas miné ! Faîtes [p]mine pioche pour miner !".format(minerai[0]))
             else:
                 pass
         else:
