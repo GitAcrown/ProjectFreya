@@ -40,15 +40,26 @@ class Stock:
         """Ajoute une catégorie au module."""
         nom = nom.upper()
         descr = " ".join(descr)
-        if descr != "":
-            if nom not in self.img["CAT"]:
-                self.img["CAT"][nom] = {"NOM" : nom, "DESC" : descr}
-                fileIO("data/stock/img.json", "save", self.img)
-                await self.bot.say("**Votre catégorie {} à bien été admise**".format(nom))
+        if "URLONLY" in self.img["CAT"]:
+            if "AUTRES" in self.img["CAT"]:
+                if descr != "":
+                    if nom not in self.img["CAT"]:
+                        self.img["CAT"][nom] = {"NOM" : nom, "DESC" : descr}
+                        fileIO("data/stock/img.json", "save", self.img)
+                        await self.bot.say("**Votre catégorie {} à bien été admise**".format(nom))
+                    else:
+                        await self.bot.say("Cette catégorie semble déjà exister. Utilisez [p]catdel pour supprimer une catégorie.")
+                else:
+                    await self.bot.say("Vous devez ajouter une description rapide à votre catégorie.")
             else:
-                await self.bot.say("Cette catégorie semble déjà exister. Utilisez [p]catdel pour supprimer une catégorie.")
+                await self.bot.say("Création de la catégorie par défaut 'AUTRES'\n*Les images sans catégories seront placés dedans.*")
+                self.img["CAT"]["AUTRES"] = {"NOM" : "AUTRES", "DESC" : "Images sans catégories."}
+                fileIO("data/stock/img.json", "save", self.img)
         else:
-            await self.bot.say("Vous devez ajouter une description rapide à votre catégorie.")
+            await self.bot.say("Création de la catégorie par défaut 'URLONLY'\n*Placez des images dedans pour que le bot n'affiche que les URL plutôt que de ls upload.*")
+            self.img["CAT"]["AUTRES"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
+            fileIO("data/stock/img.json", "save", self.img)
+        
 
     @imgset.command(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(kick_members=True)
@@ -58,6 +69,10 @@ class Stock:
         if nom in self.img["CAT"]:
             if "AUTRES" not in self.img["CAT"]:
                 self.img["CAT"]["AUTRES"] = {"NOM" : "AUTRES", "DESC" : "Images sans catégories."}
+                fileIO("data/stock/img.json", "save", self.img)
+            if "URLONLY" not in self.img["CAT"]:
+                self.img["CAT"]["AUTRES"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
+                fileIO("data/stock/img.json", "save", self.img)
             for image in self.img["IMG"]:
                 if self.img["IMG"][image]["CAT"] == nom:
                     self.img["IMG"][image]["CAT"] = "AUTRES"
@@ -74,6 +89,9 @@ class Stock:
 
         Vous pouvez créer des catégories avec [p]img cat"""
         cat = cat.upper()
+        if cat not in self.img["CAT"]:
+            await self.bot.say("Cette catégorie n'existe pas. Je vais donc placer cette image dans la catégorie 'AUTRES' si elle existe. (Vous pourrez changer sa catégorie plus tard avec 'edit')")
+            cat = "AUTRES"
         if cat in self.img["CAT"]:
             if nom not in self.img["IMG"]:
                 filename = url.split('/')[-1]
@@ -99,7 +117,7 @@ class Stock:
             else:
                 await self.bot.say("Image déjà chargée.")
         else:
-            await self.bot.say("Cette catégorie n'existe pas. Vous pouvez créer des catégories avec [p]img cat.")
+            await self.bot.say("Il semblerait que la catégorie 'AUTRES' n'existe pas. Veuillez créer au moins une catégorie pour lancer la création des catégories par défaut.")
 
     @imgset.command(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(kick_members=True)
@@ -178,17 +196,24 @@ class Stock:
             if output:
                 for img in output:
                     if img in self.img["IMG"]:
-                        chemin = self.img["IMG"][img]["CHEMIN"]
-                        url = self.img["IMG"][img]["URL"]
-                        try:
-                            await self.bot.send_file(channel, chemin)
-                        except Exception as e:
-                            print("Erreur, impossible d'upload l'image : {}".format(e))
-                            print("Je vais envoyer l'URL lié à la place.")
+                        if self.img["IMG"][img]["CAT"] != "URLONLY":
+                            chemin = self.img["IMG"][img]["CHEMIN"]
+                            url = self.img["IMG"][img]["URL"]
+                            try:
+                                await self.bot.send_file(channel, chemin)
+                            except Exception as e:
+                                print("Erreur, impossible d'upload l'image : {}".format(e))
+                                print("Je vais envoyer l'URL liée à la place.")
+                                if url != None:
+                                    await self.bot.send_message(channel, url)
+                                else:
+                                    print("Je n'ai pas le lien non plus...")
+                        else:
+                            url = self.img["IMG"][img]["URL"]
                             if url != None:
                                 await self.bot.send_message(channel, url)
                             else:
-                                print("Je n'ai pas le lien non plus...")
+                                print("Image en catégorie 'URLONLY'.")
                     else:
                         pass
             else:
