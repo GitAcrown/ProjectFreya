@@ -40,24 +40,23 @@ class Stock:
         """Ajoute une catégorie au module."""
         nom = nom.upper()
         descr = " ".join(descr)
-        if "URLONLY" in self.img["CAT"]:
-            if "AUTRES" in self.img["CAT"]:
-                if descr != "":
-                    if nom not in self.img["CAT"]:
-                        self.img["CAT"][nom] = {"NOM" : nom, "DESC" : descr}
-                        fileIO("data/stock/img.json", "save", self.img)
-                        await self.bot.say("**Votre catégorie {} à bien été admise**".format(nom))
-                    else:
-                        await self.bot.say("Cette catégorie semble déjà exister. Utilisez [p]catdel pour supprimer une catégorie.")
+        if "URLONLY" in self.img["CAT"] and "AUTRES" in self.img["CAT"]:
+            if descr != "":
+                if nom not in self.img["CAT"]:
+                    self.img["CAT"][nom] = {"NOM" : nom, "DESC" : descr}
+                    fileIO("data/stock/img.json", "save", self.img)
+                    await self.bot.say("**Votre catégorie {} à bien été admise**".format(nom))
                 else:
-                    await self.bot.say("Vous devez ajouter une description rapide à votre catégorie.")
+                    await self.bot.say("Cette catégorie semble déjà exister. Utilisez [p]catdel pour supprimer une catégorie.")
             else:
-                await self.bot.say("Création de la catégorie par défaut 'AUTRES'\n*Les images sans catégories seront placés dedans.*")
-                self.img["CAT"]["AUTRES"] = {"NOM" : "AUTRES", "DESC" : "Images sans catégories."}
-                fileIO("data/stock/img.json", "save", self.img)
+                await self.bot.say("Vous devez ajouter une description rapide à votre catégorie.")
         else:
             await self.bot.say("Création de la catégorie par défaut 'URLONLY'\n*Placez des images dedans pour que le bot n'affiche que les URL plutôt que de ls upload.*")
-            self.img["CAT"]["AUTRES"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
+            self.img["CAT"]["URLONLY"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
+            fileIO("data/stock/img.json", "save", self.img)
+            await asyncio.sleep(1^)
+            await self.bot.say("Création de la catégorie par défaut 'AUTRES'\n*Les images sans catégories seront placés dedans.*")
+            self.img["CAT"]["AUTRES"] = {"NOM" : "AUTRES", "DESC" : "Images sans catégories."}
             fileIO("data/stock/img.json", "save", self.img)
         
 
@@ -71,7 +70,7 @@ class Stock:
                 self.img["CAT"]["AUTRES"] = {"NOM" : "AUTRES", "DESC" : "Images sans catégories."}
                 fileIO("data/stock/img.json", "save", self.img)
             if "URLONLY" not in self.img["CAT"]:
-                self.img["CAT"]["AUTRES"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
+                self.img["CAT"]["URLONLY"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
                 fileIO("data/stock/img.json", "save", self.img)
             for image in self.img["IMG"]:
                 if self.img["IMG"][image]["CAT"] == nom:
