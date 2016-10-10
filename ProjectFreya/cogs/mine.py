@@ -66,6 +66,13 @@ class Mine:
             msg += "```"
             await self.bot.say(msg)
 
+    @mineset.command(aliases = ["reset"], hidden=True, pass_context=True, no_pm=True)
+    @checks.admin_or_permissions(kick_members=True)
+    async def reset_module(self, ctx):
+        """Permet de reset le module"""
+        self.reset()
+        await self.bot.say("Module reset.")
+
     @mineset.command(aliases = ["add"], pass_context=True, no_pm=True)
     @checks.admin_or_permissions(kick_members=True)
     async def addchannel(self, ctx, channelid):
@@ -208,14 +215,11 @@ class Mine:
         if author.id in self.inv:
             if bank.account_exists(author):
                 for item in self.inv[author.id]:
-                    if self.inv[author.id][item]["QUANTITE"] > 0:
-                        vente = self.inv[author.id][item]["PUNITE"] * self.inv[author.id][item]["QUANTITE"]
-                        before = self.inv[author.id][item]["QUANTITE"]
-                        self.inv[author.id][item]["QUANTITE"] = 0
-                        bank.deposit_credits(author, vente)
-                        msg += "Vous venez de vendre {} **{}**. Vous obtenez donc {}§\n".format(before, item, vente)
-                    else:
-                        pass
+                    vente = self.inv[author.id][item]["PUNITE"] * self.inv[author.id][item]["QUANTITE"]
+                    before = self.inv[author.id][item]["QUANTITE"]
+                    self.inv[author.id][item]["QUANTITE"] = 0
+                    bank.deposit_credits(author, vente)
+                    msg += "Vous venez de vendre {} **{}**. Vous obtenez donc {}§\n".format(before, item, vente)
                 else:
                     fileIO("data/mine/inv.json", "save", self.inv)
                     await self.bot.say(msg)
@@ -304,12 +308,8 @@ class Mine:
                 channel = self.bot.get_channel(minechan) #On obtient le channel lié à l'ID 
                 minerai = self.gen_mine() #On génère un minerai
                 self.sys["SPAWNED"] = minerai #On met le minerai dans la mémoire
-                await self.bot.send_message(channel, "**{}** vient d'apparaitre ! Faîtes [p]mine pioche pour miner !".format(minerai[0])) #On fait spawner le minerai généré (en msg)
+                await self.bot.send_message(channel, "-------------------------------------\n**{}** vient d'apparaitre ! Faîtes [p]mine pioche pour miner !\n-------------------------------------".format(minerai[0])) #On fait spawner le minerai généré (en msg)
                 fileIO("data/mine/sys.json", "save", self.sys)
-            elif self.sys["COMPTEUR"] == self.sys["LIMITE"] + 50:
-                await self.bot.send_message(channel, "**{}** est toujours sur le channel ! Faîtes [p]mine pioche pour miner !".format(minerai[0]))
-            elif self.sys["COMPTEUR"] == self.sys["LIMITE"] + 100:
-                await self.bot.send_message(channel, "**{}** n'est toujours pas miné ! Faîtes [p]mine pioche pour miner !".format(minerai[0]))
             else:
                 pass
         else:
