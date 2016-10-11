@@ -34,6 +34,14 @@ class Stock:
             msg += "```"
             await self.bot.say(msg)
 
+    @imgset.command(pass_context=True, no_pm=True, hidden=True)
+    @checks.mod_or_permissions(kick_members=True)
+    async def erase(self):
+        """Efface entièrement les données du module."""
+        self.img = {default_img}
+        fileIO("data/stock/img.json", "save", self.img)
+        await self.bot.say("Suppression des données du module Stick réussie.")
+
     @imgset.command(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(kick_members=True)
     async def catadd(self, ctx, nom, *descr):
@@ -54,7 +62,7 @@ class Stock:
             await self.bot.say("Création de la catégorie par défaut 'URLONLY'\n*Placez des images dedans pour que le bot n'affiche que les URL plutôt que de ls upload.*")
             self.img["CAT"]["URLONLY"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
             fileIO("data/stock/img.json", "save", self.img)
-            await asyncio.sleep(1^)
+            await asyncio.sleep(1)
             await self.bot.say("Création de la catégorie par défaut 'AUTRES'\n*Les images sans catégories seront placés dedans.*")
             self.img["CAT"]["AUTRES"] = {"NOM" : "AUTRES", "DESC" : "Images sans catégories."}
             fileIO("data/stock/img.json", "save", self.img)
