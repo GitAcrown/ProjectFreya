@@ -59,8 +59,8 @@ class Stock:
             else:
                 await self.bot.say("Vous devez ajouter une description rapide à votre catégorie.")
         else:
-            await self.bot.say("Création de la catégorie par défaut 'URLONLY'\n*Placez des images dedans pour que le bot n'affiche que les URL plutôt que de ls upload.*")
-            self.img["CAT"]["URLONLY"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
+            await self.bot.say("Création de la catégorie par défaut 'URLONLY'\n*Placez des images dedans pour que le bot n'affiche que les URL plutôt que de les upload.*")
+            self.img["CAT"]["URLONLY"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URLs."}
             fileIO("data/stock/img.json", "save", self.img)
             await asyncio.sleep(1)
             await self.bot.say("Création de la catégorie par défaut 'AUTRES'\n*Les images sans catégories seront placés dedans.*")
@@ -78,7 +78,7 @@ class Stock:
                 self.img["CAT"]["AUTRES"] = {"NOM" : "AUTRES", "DESC" : "Images sans catégories."}
                 fileIO("data/stock/img.json", "save", self.img)
             if "URLONLY" not in self.img["CAT"]:
-                self.img["CAT"]["URLONLY"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URL."}
+                self.img["CAT"]["URLONLY"] = {"NOM" : "URLONLY", "DESC" : "Seulement les URLs."}
                 fileIO("data/stock/img.json", "save", self.img)
             for image in self.img["IMG"]:
                 if self.img["IMG"][image]["CAT"] == nom:
@@ -96,9 +96,6 @@ class Stock:
 
         Vous pouvez créer des catégories avec [p]img cat"""
         cat = cat.upper()
-        if cat not in self.img["CAT"]:
-            await self.bot.say("Cette catégorie n'existe pas. Je vais donc placer cette image dans la catégorie 'AUTRES' si elle existe. (Vous pourrez changer sa catégorie plus tard avec 'edit')")
-            cat = "AUTRES"
         if cat in self.img["CAT"]:
             if nom not in self.img["IMG"]:
                 filename = url.split('/')[-1]
@@ -124,7 +121,12 @@ class Stock:
             else:
                 await self.bot.say("Image déjà chargée.")
         else:
-            await self.bot.say("Il semblerait que la catégorie 'AUTRES' n'existe pas. Veuillez créer au moins une catégorie pour lancer la création des catégories par défaut.")
+            await self.bot.say("Cette catégorie n'existe pas. Je vais vous envoyer une liste des catégories disponibles...")
+            msg = ""
+            for categorie in self.img["CAT"]:
+                msg += "**{}** | *{}*\n".format(self.img["CAT"][categorie]["NOM"], self.img["CAT"][categorie]["DESC"])
+            else:
+                await self.bot.whisper(msg)
 
     @imgset.command(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(kick_members=True)
@@ -146,7 +148,12 @@ class Stock:
             else:
                 await self.bot.say("Ce nom n'est pas dans ma base de données")
         else:
-            await self.bot.say("Cette catégorie n'existe pas.")
+            await self.bot.say("Cette catégorie n'existe pas. Je vais vous envoyer une liste des catégories disponibles...")
+            msg = ""
+            for categorie in self.img["CAT"]:
+                msg += "**{}** | *{}*\n".format(self.img["CAT"][categorie]["NOM"], self.img["CAT"][categorie]["DESC"])
+            else:
+                await self.bot.whisper(msg)
 
     @imgset.command(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(kick_members=True)
