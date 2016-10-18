@@ -1,9 +1,0 @@
-Version du bot :
-
-V1.0 03/09
-- Version de base contenant la majorité des modules (Sauf Images et Audio)
-
-V1.1 03/09
-- Ajout de "Wipe" dans Economy.py
-- Ajout de "Make" dans General.py
-- Corrections de bugs (Dans le terminal)
