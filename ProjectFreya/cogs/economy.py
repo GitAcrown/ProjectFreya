@@ -256,7 +256,7 @@ class Economy:
             self.bank.transfer_credits(author, user, sum)
             logger.info("{}({}) transferred {} credits to {}({})".format(
                 author.name, author.id, sum, user.name, user.id))
-            await self.bot.say("{} crédits ont été transférés au compte de {}. (Taxe de 4%)".format(sum, user.name))
+            await self.bot.say("{} crédits ont été transférés au compte de {}. (Taxe de 8%)".format(sum, user.name))
         except NegativeValue:
             await self.bot.say("Vous avez besoin de transférer au moins 1 crédit.")
         except SameSenderAndReceiver:
