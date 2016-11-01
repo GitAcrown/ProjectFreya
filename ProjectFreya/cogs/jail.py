@@ -12,6 +12,7 @@ class Jail:
 
     def __init__(self, bot):
         self.bot = bot
+        self.regis = dataIO.load_json("data/jail/regis.json")
         self.sys = dataIO.load_json("data/jail/sys.json")
         self.scenario = [["Vous tentez de scier les barreaux avec un couteau récupéré à la cantine. (-10%)", 10],
                          ["Vous essayez de creuser le mur fissuré avec une cuillère. (-15%)", 15],
@@ -19,11 +20,12 @@ class Jail:
                          ["Vous tentez de faire croire à votre mort (-20%)", 20],
                          ["Vous tentez d'aller à l'infirmerie en vous enfonçant une savonette dans l'anus (-10%)", 10],
                          ["Vous essayez de fuir par les aérations des douches (-15%)", 15],
+                         ["Vous arrivez à voler une tenue sale d'un gardien (-5%)", 5],
                          ["Vous tentez de fuir avec un complice garde dans la prison (-5%)", 5]] #Rajouter si désiré. Format : ["Message (-x%)", malus],
 
     @commands.group(pass_context=True)
     async def jail(self, ctx):
-        """Gestion du module Prison."""
+        """Gestion du profil."""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
             msg = "```"
@@ -87,6 +89,9 @@ class Jail:
         Par défaut : Autorisé à jouer / 5 minutes."""
         server = ctx.message.server
         prol = self.sys["ROLE"]
+        if user.id not in self.regis:
+            self.regis[user.id] = {"Pseudo": user.name, "Karma": 0}
+            fileIO("data/jail/regis.json", "save", self.regis)
         if user.id not in self.sys["USERS"]:
             self.sys["USERS"][user.id] = {"NOM" : user.name, "INV" : {}, "JEU" : jeu}
             fileIO("data/jail/sys.json", "save", self.sys)
@@ -96,24 +101,30 @@ class Jail:
         if temps >= 1:
             minutes = temps * 60 #On veut un temps en minutes
             if prol not in [r.name for r in user.roles]:
+                if self.regis[user.id]["Karma"] > 0:
+                    await self.bot.whisper("Cet utilisateur à déjà été mis en prison {} fois aujourd'hui. Je vous conseille une meilleure punition.".format(self.regis[user.id]["Karma"]))
                 await self.bot.add_roles(user, r)
-                await self.bot.say("**{}** est maintenant en prison pour {} minute(s).".format(user.name, temps))
+                await self.bot.say("**{}** est maintenant en prison pour {} minute(s). (+1 Karma)".format(user.name, temps))
+                self.regis[user.id]["Karma"] += 1
                 await self.bot.send_message(user, "Tu es maintenant en prison pour {} minute(s). Si tu as une réclamation à faire, va sur le canal *prison* du serveur ou contacte un modérateur.".format(temps))
+                await self.bot.server_voice_state(user, mute=True)
                 # ^ Mise en prison
                 await asyncio.sleep(minutes)
                 # v Sortie de prison
                 if prol in [r.name for r in user.roles]:
                     await self.bot.remove_roles(user, r)
+                    await self.bot.server_voice_state(user, mute=False)
                     await self.bot.say("**{}** à été libéré de la prison.".format(user.name))
                     await self.bot.send_message(user, "Tu es libéré de la prison.")
                 else:
                     pass
             else:
                 await self.bot.remove_roles(user, r)
+                await self.bot.server_voice_state(user, mute=False)
                 await self.bot.say("**{}** à été libéré de la prison plus tôt que prévu.".format(user.name))
                 await self.bot.send_message(user, "Tu a été libéré de la prison.")
         else:
-            await self.bot;say("Le minimum est de une minute.")
+            await self.bot.say("Le minimum est de une minute.")
 
     @jail.command(pass_context=True)
     @checks.mod_or_permissions(ban_members=True)
@@ -213,9 +224,10 @@ class Jail:
         r = discord.utils.get(ctx.message.server.roles, name=prol)
         user = ctx.message.author
         server = ctx.message.server
-        chance = 0
+        chance = 10
         msg = "**Vous utilisez :**\n"
         msgpr = ""
+        bank = self.bot.get_cog('Economy').bank
         if prol in [r.name for r in user.roles]:
             if user.id in self.sys["USERS"]:
                 if self.sys["USERS"][user.id]["JEU"]:
@@ -264,12 +276,21 @@ class Jail:
                         self.sys["USERS"][user.id]["INV"] = {}
                         await self.bot.remove_roles(user, r)
                         await self.bot.say("**{}** à été libéré de la prison. (Gagnant du jeu)".format(user.name))
+                        await self.bot.server_voice_state(user, mute=False)
                         await self.bot.send_message(user, "Tu es libéré de la prison. Bravo !")
                         fileIO("data/jail/sys.json", "save", self.sys)
                     else:
                         await self.bot.say("**Echec !**")
                         await asyncio.sleep(0.5)
-                        await self.bot.say("Vous restez en prison et on vous retire l'ensemble des vos affaires.")
+                        await self.bot.say("Vous restez en prison, on vous retire l'ensemble de vos affaires et vous perdez 150§.")
+                        if bank.account_exists(user):
+                            if bank.can_spend(user, 150):
+                                bank.withdraw_credits(user, 150)
+                            else:
+                                await asyncio.sleep(0.5)
+                                await self.bot.say("Mais vous avez de la chance, vous êtes trop pauvre.")
+                        else:
+                            await self.bot.say("Heureusement pour vous, vous n'avez pas de compte bancaire...")
                         self.sys["USERS"][user.id]["INV"] = {}
                         fileIO("data/jail/sys.json", "save", self.sys)
                 else:
@@ -282,6 +303,17 @@ class Jail:
                 await self.bot.whisper("Vous êtes maintenant inscrit à ma base de données.")
         else:
             await self.bot.say("Vous n'êtes pas prisonnier !")
+
+    async def karma_update(self):
+        while self == self.bot.get_cog("Jail"):
+            for id in self.regis:
+                if self.regis[id]["Karma"] != 0:
+                    self.regis[id]["Karma"] = 0
+                else:
+                    pass
+            fileIO("data/jail/regis.json", "save", self.regis)
+            await asyncio.sleep(86400)  # La tâche recommence tout les 24h
+
         
 def check_folders():
     folders = ("data", "data/jail/")
@@ -291,12 +323,17 @@ def check_folders():
             os.makedirs(folder)
 
 def check_files():
-     if not os.path.isfile("data/jail/sys.json"):
+    if not os.path.isfile("data/jail/sys.json"):
         print("Je crée la base de données de Jail...")
         fileIO("data/jail/sys.json", "save", {})
+
+    if not os.path.isfile("data/jail/regis.json"):
+        print("Je crée la base de données pour le Karma...")
+        fileIO("data/jail/regis.json", "save", {})
 
 def setup(bot):
     check_folders()
     check_files()
     n = Jail(bot)
     bot.add_cog(n)
+    bot.loop.create_task(n.karma_update())
