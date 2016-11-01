@@ -10,7 +10,6 @@ from __main__ import send_cmd_help
 import os
 import time
 import logging
-import asyncio
 
 #Modifié
 
@@ -249,9 +248,9 @@ class Economy:
 
     @_bank.command(pass_context=True)
     async def transfer(self, ctx, user : discord.Member, sum : int):
-        """Transfert des crédits d'un utilisateur à un autre. (Taxe de 4%)"""
+        """Transfert des crédits d'un utilisateur à un autre. (Taxe de 8%)"""
         author = ctx.message.author
-        mult = sum * 0.96
+        mult = sum * 0.92
         sum = round(mult)
         try:
             self.bank.transfer_credits(author, user, sum)
